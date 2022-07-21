@@ -517,7 +517,9 @@ test-hax: $(PY_VENV_DIR)
 	@$(call _info,Running hax autotests)
 	@cd hax &&\
 	  $(PY_VENV) &&\
-	  pytest -v test/
+	  coverage run -m pytest -v test/ &&\
+	  coverage report -m &&\
+	  coverage html
 
 .PHONY: lint-hax
 lint-hax: $(PY_VENV_DIR)
