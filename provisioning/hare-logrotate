@@ -1,7 +1,7 @@
 /var/log/seagate/hare/*.log
 {
-    rotate 10
-    maxsize 50M
+    rotate 50
+    maxsize 100M
     weekly
     compress
     missingok

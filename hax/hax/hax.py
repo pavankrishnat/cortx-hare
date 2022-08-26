@@ -41,6 +41,7 @@ from hax.motr.delivery import DeliveryHerald
 from hax.motr.ffi import HaxFFI
 from hax.motr.planner import WorkPlanner
 from hax.motr.rconfc import RconfcStarter
+from hax.profiler import Profiler
 from hax.server import ServerRunner
 from hax.types import Fid, Profile, StoppableThread
 from hax.util import ConsulUtil, ProcessGroup, repeat_if_fails
@@ -81,14 +82,14 @@ def _run_qconsumer_thread(planner: WorkPlanner, motr: Motr,
 # place, this will be reverted
 def _run_stats_updater_thread(motr: Motr,
                               consul_util: ConsulUtil) -> StoppableThread:
-    return _run_thread(FsStatsUpdater(motr, consul_util, interval_sec=600))
+    return _run_thread(FsStatsUpdater(motr, consul_util, interval_sec=10))
 
 
 # TODO this is work around and once the proper fix for CORTX-27707 is in
 # place, this will be reverted
 def _run_bc_updater_thread(motr: Motr,
                            consul_util: ConsulUtil) -> StoppableThread:
-    return _run_thread(ByteCountUpdater(motr, consul_util, interval_sec=600))
+    return _run_thread(ByteCountUpdater(motr, consul_util, interval_sec=10))
 
 
 @repeat_if_fails()
@@ -146,6 +147,10 @@ def _run_rconfc_starter_thread(motr: Motr,
     rconfc_starter = RconfcStarter(motr, consul_util)
     rconfc_starter.start()
     return rconfc_starter
+
+
+def _run_profiler() -> StoppableThread:
+    return _run_thread(Profiler())
 
 
 def set_locale():
@@ -230,6 +235,7 @@ def main():
         stats_updater = _run_stats_updater_thread(motr, consul_util=util)
         bc_updater = _run_bc_updater_thread(motr, consul_util=util)
         event_poller = _run_thread(create_ha_thread(planner, util))
+        profiler = _run_profiler()
         # [KN] This is a blocking call. It will work until the program is
         # terminated by signal
 
@@ -242,7 +248,8 @@ def main():
                                     stats_updater,
                                     bc_updater,
                                     rconfc_starter,
-                                    event_poller
+                                    event_poller,
+                                    profiler
                                     ],
                    port=hax_http_port)
     except Exception:

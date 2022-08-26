@@ -1,8 +1,8 @@
 TMP_LOG_PATH/*.log
 TMP_LOG_PATH/hare_deployment/*.log
 {
-    rotate 10
-    maxsize 50M
+    rotate 50
+    maxsize 100M
     weekly
     compress
     missingok
